@@ -122,6 +122,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` u `` | View upstream options | View options relating to the branch's upstream e.g. setting/unsetting the upstream and resetting to the upstream. |
 | `` <ctrl+t> `` | Open externe diff applicatie (git difftool) |  |
 | `` P `` | Push selected branch | Push the selected branch to its upstream branch. If no upstream is configured, you will be prompted to configure an upstream branch. |
+| `` p `` | Pull selected branch | Pull the selected branch's upstream branch into it, via its linked worktree. If no upstream is configured, you will be prompted to configure an upstream branch. |
 | `` 0 `` | Focus main view |  |
 | `` <enter> `` | Bekijk commits |  |
 | `` / `` | Filter the current view by text |  |

@@ -151,6 +151,44 @@ func (self *SyncController) pull(currentBranch *models.Branch) error {
 	return self.PullAux(currentBranch, PullFilesOptions{Action: action})
 }
 
+// PullBranch pulls the given branch via its linked worktree (which may or
+// may not be the currently open one). The caller is responsible for
+// confirming the branch has a linked worktree at all.
+func (self *SyncController) PullBranch(branch *models.Branch, worktree *models.Worktree) error {
+	action := self.c.Tr.Actions.Pull
+
+	worktreeGitDir := ""
+	worktreePath := ""
+	if !worktree.IsCurrent {
+		worktreeGitDir = worktree.GitDir
+		worktreePath = worktree.Path
+	}
+
+	opts := PullFilesOptions{
+		Action:            action,
+		WorktreeGitDir:    worktreeGitDir,
+		WorktreePath:      worktreePath,
+		IsCurrentWorktree: worktree.IsCurrent,
+	}
+
+	if !branch.IsTrackingRemote() {
+		return self.c.Helpers().Upstream.PromptForUpstreamWithInitialContent(branch, func(upstream string) error {
+			upstreamRemote, upstreamBranch, err := self.c.Helpers().Upstream.ParseUpstream(upstream)
+			if err != nil {
+				return err
+			}
+
+			if err := self.c.Git().Branch.SetUpstream(upstreamRemote, upstreamBranch, branch.Name); err != nil {
+				return err
+			}
+
+			return self.PullAux(branch, opts)
+		})
+	}
+
+	return self.PullAux(branch, opts)
+}
+
 func (self *SyncController) setCurrentBranchUpstream(upstream string) error {
 	upstreamRemote, upstreamBranch, err := self.c.Helpers().Upstream.ParseUpstream(upstream)
 	if err != nil {
@@ -174,6 +212,14 @@ type PullFilesOptions struct {
 	UpstreamBranch  string
 	FastForwardOnly bool
 	Action          string
+
+	// Set when pulling a branch that isn't checked out in the current
+	// worktree, but has its own linked worktree elsewhere. Empty for the
+	// current worktree.
+	WorktreeGitDir string
+	WorktreePath   string
+	// False whenever WorktreeGitDir/WorktreePath are set.
+	IsCurrentWorktree bool
 }
 
 func (self *SyncController) PullAux(currentBranch *models.Branch, opts PullFilesOptions) error {
@@ -191,8 +237,22 @@ func (self *SyncController) pullWithLock(task gocui.Task, opts PullFilesOptions)
 			RemoteName:      opts.UpstreamRemote,
 			BranchName:      opts.UpstreamBranch,
 			FastForwardOnly: opts.FastForwardOnly,
+			WorktreeGitDir:  opts.WorktreeGitDir,
+			WorktreePath:    opts.WorktreePath,
 		},
 	)
+
+	if !opts.IsCurrentWorktree {
+		// We're not looking at this worktree, so we can't drop the user into
+		// an interactive rebase/merge-conflict resolution flow for it - that
+		// UI operates on the currently open worktree. Report the failure
+		// plainly instead and point them at switching to it.
+		if err != nil {
+			return fmt.Errorf("%s\n\n%s", err.Error(), self.c.Tr.PullFailedInOtherWorktree)
+		}
+		self.c.RefreshFromWorker(types.RefreshOptions{})
+		return nil
+	}
 
 	return self.c.Helpers().MergeAndRebase.CheckMergeOrRebaseAndSelectHeadCommit(err)
 }

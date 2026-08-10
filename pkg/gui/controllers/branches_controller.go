@@ -25,6 +25,7 @@ type BranchesController struct {
 	c *ControllerCommon
 
 	pushBranch func(*models.Branch) error
+	pullBranch func(*models.Branch, *models.Worktree) error
 }
 
 var _ types.IController = &BranchesController{}
@@ -32,11 +33,13 @@ var _ types.IController = &BranchesController{}
 func NewBranchesController(
 	c *ControllerCommon,
 	pushBranch func(*models.Branch) error,
+	pullBranch func(*models.Branch, *models.Worktree) error,
 ) *BranchesController {
 	return &BranchesController{
 		baseController: baseController{},
 		c:              c,
 		pushBranch:     pushBranch,
+		pullBranch:     pullBranch,
 		ListControllerTrait: NewListControllerTrait(
 			c,
 			c.Contexts().Branches,
@@ -206,6 +209,13 @@ func (self *BranchesController) GetKeybindings(opts types.KeybindingsOpts) []*ty
 			GetDisabledReason: self.require(self.singleItemSelected(self.notPushingOrPulling)),
 			Description:       self.c.Tr.PushSelectedBranch,
 			Tooltip:           self.c.Tr.PushSelectedBranchTooltip,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.Universal.Pull),
+			Handler:           opts.Guards.NoPopupPanel(self.withItem(self.pull)),
+			GetDisabledReason: self.require(self.singleItemSelected(self.notPushingOrPulling, self.branchHasWorktree)),
+			Description:       self.c.Tr.PullSelectedBranch,
+			Tooltip:           self.c.Tr.PullSelectedBranchTooltip,
 		},
 	}
 }
@@ -471,6 +481,24 @@ func (self *BranchesController) press(selectedBranch *models.Branch) error {
 
 func (self *BranchesController) push(branch *models.Branch) error {
 	return self.pushBranch(branch)
+}
+
+func (self *BranchesController) pull(branch *models.Branch) error {
+	worktree, ok := self.worktreeForBranch(branch)
+	if !ok {
+		// Guarded against by branchHasWorktree, but be defensive.
+		return errors.New(self.c.Tr.BranchHasNoWorktree)
+	}
+
+	return self.pullBranch(branch, worktree)
+}
+
+func (self *BranchesController) branchHasWorktree(branch *models.Branch) *types.DisabledReason {
+	if _, ok := self.worktreeForBranch(branch); !ok {
+		return &types.DisabledReason{Text: self.c.Tr.BranchHasNoWorktree}
+	}
+
+	return nil
 }
 
 func (self *BranchesController) notPushingOrPulling(branch *models.Branch) *types.DisabledReason {
