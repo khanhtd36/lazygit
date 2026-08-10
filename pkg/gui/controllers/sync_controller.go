@@ -55,7 +55,17 @@ func (self *SyncController) Context() types.Context {
 }
 
 func (self *SyncController) HandlePush() error {
-	return self.branchCheckedOut(self.push)()
+	return self.branchCheckedOut(func(branch *models.Branch) error {
+		return self.push(branch, false)
+	})()
+}
+
+// PushBranch pushes the given branch, regardless of whether it's currently
+// checked out. Unlike HandlePush, this always targets the branch explicitly
+// (via its own upstream), rather than relying on `git push` implicitly
+// pushing whatever is checked out.
+func (self *SyncController) PushBranch(branch *models.Branch) error {
+	return self.push(branch, true)
 }
 
 func (self *SyncController) HandlePull() error {
@@ -86,10 +96,19 @@ func (self *SyncController) branchCheckedOut(f func(*models.Branch) error) func(
 	}
 }
 
-func (self *SyncController) push(currentBranch *models.Branch) error {
+// explicitTarget forces the push to name the branch and its upstream
+// explicitly in the refspec, rather than relying on `git push` implicitly
+// targeting whatever is currently checked out. This is required whenever
+// currentBranch might not be the checked-out branch (e.g. pushing a branch
+// selected in the Branches panel).
+func (self *SyncController) push(currentBranch *models.Branch, explicitTarget bool) error {
 	// if we are behind our upstream branch we'll ask if the user wants to force push
 	if currentBranch.IsTrackingRemote() {
 		opts := pushOpts{remoteBranchStoredLocally: currentBranch.RemoteBranchStoredLocally()}
+		if explicitTarget {
+			opts.upstreamRemote = currentBranch.UpstreamRemote
+			opts.upstreamBranch = currentBranch.UpstreamBranch
+		}
 		if currentBranch.IsBehindForPush() {
 			return self.requestToForcePush(currentBranch, opts)
 		}
@@ -97,7 +116,7 @@ func (self *SyncController) push(currentBranch *models.Branch) error {
 		return self.pushAux(currentBranch, opts)
 	}
 
-	if self.c.Git().Config.GetPushToCurrent() {
+	if !explicitTarget && self.c.Git().Config.GetPushToCurrent() {
 		return self.pushAux(currentBranch, pushOpts{setUpstream: true})
 	}
 

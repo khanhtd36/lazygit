@@ -65,6 +65,8 @@ type TranslationSet struct {
 	Pull                                  string
 	PushTooltip                           string
 	PullTooltip                           string
+	PushSelectedBranch                    string
+	PushSelectedBranchTooltip             string
 	FileFilter                            string
 	CopyToClipboardMenu                   string
 	CopyFileName                          string
@@ -1207,6 +1209,8 @@ func EnglishTranslationSet() *TranslationSet {
 		RefreshTooltip:                       "Refresh the git state (i.e. run `git status`, `git branch`, etc in background to update the contents of panels). This does not run `git fetch`.",
 		Push:                                 "Push",
 		PushTooltip:                          "Push the current branch to its upstream branch. If no upstream is configured, you will be prompted to configure an upstream branch.",
+		PushSelectedBranch:                   "Push selected branch",
+		PushSelectedBranchTooltip:            "Push the selected branch to its upstream branch. If no upstream is configured, you will be prompted to configure an upstream branch.",
 		Pull:                                 "Pull",
 		PullTooltip:                          "Pull changes from the remote for the current branch. If no upstream is configured, you will be prompted to configure an upstream branch.",
 		MergeConflictsTitle:                  "Merge conflicts",

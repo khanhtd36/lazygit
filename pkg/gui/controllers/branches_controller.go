@@ -23,16 +23,20 @@ type BranchesController struct {
 	baseController
 	*ListControllerTrait[*models.Branch]
 	c *ControllerCommon
+
+	pushBranch func(*models.Branch) error
 }
 
 var _ types.IController = &BranchesController{}
 
 func NewBranchesController(
 	c *ControllerCommon,
+	pushBranch func(*models.Branch) error,
 ) *BranchesController {
 	return &BranchesController{
 		baseController: baseController{},
 		c:              c,
+		pushBranch:     pushBranch,
 		ListControllerTrait: NewListControllerTrait(
 			c,
 			c.Contexts().Branches,
@@ -195,6 +199,13 @@ func (self *BranchesController) GetKeybindings(opts types.KeybindingsOpts) []*ty
 			}),
 			GetDisabledReason: self.require(self.singleItemSelected()),
 			Description:       self.c.Tr.OpenDiffTool,
+		},
+		{
+			Keys:              opts.GetKeys(opts.Config.Universal.Push),
+			Handler:           opts.Guards.NoPopupPanel(self.withItem(self.push)),
+			GetDisabledReason: self.require(self.singleItemSelected(self.notPushingOrPulling)),
+			Description:       self.c.Tr.PushSelectedBranch,
+			Tooltip:           self.c.Tr.PushSelectedBranchTooltip,
 		},
 	}
 }
@@ -456,6 +467,19 @@ func (self *BranchesController) press(selectedBranch *models.Branch) error {
 
 	self.c.LogAction(self.c.Tr.Actions.CheckoutBranch)
 	return self.c.Helpers().Refs.CheckoutRef(selectedBranch.Name, types.CheckoutRefOptions{})
+}
+
+func (self *BranchesController) push(branch *models.Branch) error {
+	return self.pushBranch(branch)
+}
+
+func (self *BranchesController) notPushingOrPulling(branch *models.Branch) *types.DisabledReason {
+	op := self.c.State().GetItemOperation(branch)
+	if op != types.ItemOperationNone {
+		return &types.DisabledReason{Text: self.c.Tr.CantPullOrPushSameBranchTwice}
+	}
+
+	return nil
 }
 
 func (self *BranchesController) notPulling() *types.DisabledReason {
