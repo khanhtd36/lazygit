@@ -191,7 +191,8 @@ func (self *LocalCommitsController) handleCommitDrag(opts gocui.ViewMouseBinding
 
 	self.commitDrag.hasMoved = true
 	if self.updateCommitDragInsertion(opts.Y) {
-		self.c.PostRefreshUpdate(self.context())
+		self.c.PostRefreshUpdateWithOptions(self.context(),
+			types.OnFocusOpts{KeepScrollPosition: true})
 	}
 	originY := self.context().GetView().OriginY()
 	self.dragAutoscroller.Update(opts.Y - originY)
@@ -344,7 +345,9 @@ func (self *LocalCommitsController) startMovingCommitsIndicator(insertionIndex i
 func (self *LocalCommitsController) stopMovingCommitsIndicator() {
 	self.stopMovingCommitsIndicatorTicker()
 	self.context().ClearDropInsertionIndex()
-	self.c.PostRefreshUpdate(self.context())
+	self.c.PostRefreshUpdateWithOptions(
+		self.context(), types.OnFocusOpts{SkipMainViewUpdate: true},
+	)
 }
 
 func (self *LocalCommitsController) stopMovingCommitsIndicatorTicker() {
@@ -1170,16 +1173,21 @@ func (self *LocalCommitsController) move(
 		if err := self.c.Git().Rebase.MoveTodos(selectedCommits, offset); err != nil {
 			return err
 		}
-		self.context().MoveSelection(offset)
-		self.context().HandleFocus(types.OnFocusOpts{ScrollSelectionIntoView: true})
 
 		// Block input until the refresh has landed: a quick second press must
 		// read the moved todo from the refreshed model, not grab whatever the
 		// advanced selection index points at in the stale one.
 		self.c.RefreshBlockingInput(types.RefreshOptions{
-			Scope:           []types.RefreshableView{types.REBASE_COMMITS},
-			CommitSelection: types.KeepCommitSelectionIndex,
-			Then:            onComplete,
+			Scope:              []types.RefreshableView{types.REBASE_COMMITS},
+			SkipMainViewUpdate: true,
+			Then: func() error {
+				self.context().MoveSelection(offset)
+				self.context().FocusLine(true)
+				if onComplete != nil {
+					return onComplete()
+				}
+				return nil
+			},
 		})
 		return nil
 	}
@@ -1204,7 +1212,7 @@ func (self *LocalCommitsController) move(
 				Then: func() error {
 					if err == nil {
 						self.context().MoveSelection(offset)
-						self.context().HandleFocus(types.OnFocusOpts{ScrollSelectionIntoView: true})
+						self.context().HandleFocus(types.OnFocusOpts{})
 					}
 					if onComplete != nil {
 						return onComplete()
