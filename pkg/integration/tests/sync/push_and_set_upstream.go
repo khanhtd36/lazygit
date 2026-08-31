@@ -26,7 +26,7 @@ var PushAndSetUpstream = NewIntegrationTest(NewIntegrationTestArgs{
 			Press(keys.Universal.Push)
 
 		t.ExpectPopup().Prompt().
-			Title(Equals("Enter upstream as '<remote> <branchname>'")).
+			Title(Equals("Enter upstream as '<remote> <branchname>' — new upstream branch will be created")).
 			SuggestionLines(Equals("origin master")).
 			ConfirmFirstSuggestion()
 
