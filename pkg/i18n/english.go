@@ -888,6 +888,7 @@ type TranslationSet struct {
 	SearchPrefix                             string
 	FilterPrefix                             string
 	FilterPrefixMenu                         string
+	MenuFilterHint                           string
 	ExitSearchMode                           string
 	ExitTextFilterMode                       string
 	Switch                                   string
@@ -2057,7 +2058,8 @@ func EnglishTranslationSet() *TranslationSet {
 		SearchKeybindings:                        "%s: Next match, %s: Previous match, %s: Exit search mode",
 		SearchPrefix:                             "Search: ",
 		FilterPrefix:                             "Filter: ",
-		FilterPrefixMenu:                         "Filter (prepend '@' to filter keybindings): ",
+		FilterPrefixMenu:                         "Filter ('@' for keybindings): ",
+		MenuFilterHint:                           "(Type to filter)",
 		WorktreesTitle:                           "Worktrees",
 		WorktreeTitle:                            "Worktree",
 		Switch:                                   "Switch",
