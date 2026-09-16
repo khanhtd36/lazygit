@@ -340,6 +340,9 @@ type TranslationSet struct {
 	NotMidRebase                          string
 	MustSelectFixupCommit                 string
 	RecentRepos                           string
+	RecentReposRepoLabel                  string
+	RecentReposBranchLabel                string
+	RecentReposPathLabel                  string
 	MergeOptionsTitle                     string
 	RebaseOptionsTitle                    string
 	CherryPickOptionsTitle                string
@@ -724,6 +727,7 @@ type TranslationSet struct {
 	BranchNotFoundTitle                   string
 	BranchNotFoundPrompt                  string
 	BranchUnknown                         string
+	HeadDetachedAt                        string
 	DiscardChangeTitle                    string
 	DiscardChangePrompt                   string
 	DiscardLinesFromCommitTitle           string
@@ -1507,6 +1511,9 @@ func EnglishTranslationSet() *TranslationSet {
 		NotMidRebase:                         "This action only works during an interactive rebase",
 		MustSelectFixupCommit:                "This action only works on fixup commits",
 		RecentRepos:                          "Recent repositories",
+		RecentReposRepoLabel:                 "Repo:",
+		RecentReposBranchLabel:               "Branch:",
+		RecentReposPathLabel:                 "Path:",
 		MergeOptionsTitle:                    "Merge options",
 		RebaseOptionsTitle:                   "Rebase options",
 		CherryPickOptionsTitle:               "Cherry-pick options",
@@ -1896,6 +1903,7 @@ func EnglishTranslationSet() *TranslationSet {
 		BranchNotFoundTitle:                      "Branch not found",
 		BranchNotFoundPrompt:                     "Branch not found. Create a new branch named",
 		BranchUnknown:                            "Branch unknown",
+		HeadDetachedAt:                           "HEAD detached at {{.hash}}",
 		DiscardChangeTitle:                       "Discard change",
 		DiscardChangePrompt:                      "Are you sure you want to discard this change (git reset)? It is irreversible.\nTo disable this dialogue set the config key of 'gui.skipDiscardChangeWarning' to true",
 		DiscardLinesFromCommitTitle:              "Discard lines from commit",
