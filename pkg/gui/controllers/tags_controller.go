@@ -77,6 +77,13 @@ func (self *TagsController) GetKeybindings(opts types.KeybindingsOpts) []*types.
 			DisplayOnScreen:   true,
 		},
 		{
+			Keys:            opts.GetKeys(opts.Config.Universal.Pull),
+			Handler:         self.pull,
+			Description:     self.c.Tr.PullTags,
+			Tooltip:         self.c.Tr.PullTagsTooltip,
+			DisplayOnScreen: true,
+		},
+		{
 			Keys:              opts.GetKeys(opts.Config.Commits.ViewResetOptions),
 			Handler:           self.withItem(self.createResetMenu),
 			GetDisabledReason: self.require(self.singleItemSelected()),
@@ -338,6 +345,52 @@ func (self *TagsController) push(tag *models.Tag) error {
 	})
 
 	return nil
+}
+
+func (self *TagsController) pull() error {
+	self.c.Prompt(types.PromptOpts{
+		Title:               self.c.Tr.PullTagsTitle,
+		InitialContent:      "origin",
+		FindSuggestionsFunc: self.c.Helpers().Suggestions.GetRemoteSuggestionsFunc(),
+		HandleConfirm: func(remoteName string) error {
+			return self.pullAux(remoteName, false)
+		},
+	})
+
+	return nil
+}
+
+func (self *TagsController) pullAux(remoteName string, force bool) error {
+	return self.c.WithWaitingStatus(self.c.Tr.PullingStatus, func(task gocui.Task) error {
+		self.c.LogAction(self.c.Tr.Actions.PullTags)
+		err := self.c.Git().Sync.PullTags(task, remoteName, force)
+		if err != nil {
+			if !force && strings.Contains(err.Error(), "would clobber existing tag") {
+				self.c.Confirm(types.ConfirmOpts{
+					Title:  self.c.Tr.ForcePullTags,
+					Prompt: self.forcePullTagsPrompt(),
+					HandleConfirm: func() error {
+						return self.pullAux(remoteName, true)
+					},
+				})
+				return nil
+			}
+			return err
+		}
+
+		self.c.RefreshFromWorker(types.RefreshOptions{Scope: []types.RefreshableView{types.TAGS}})
+		return nil
+	})
+}
+
+func (self *TagsController) forcePullTagsPrompt() string {
+	return utils.ResolvePlaceholderString(
+		self.c.Tr.ForcePullTagsPrompt,
+		map[string]string{
+			"cancelKey":  self.c.UserConfig().Keybinding.Universal.Return.String(),
+			"confirmKey": self.c.UserConfig().Keybinding.Universal.Confirm.String(),
+		},
+	)
 }
 
 func (self *TagsController) createResetMenu(tag *models.Tag) error {

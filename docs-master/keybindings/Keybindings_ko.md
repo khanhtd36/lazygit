@@ -372,6 +372,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` w `` | New worktree |  |
 | `` d `` | 삭제 | View delete options for local/remote tag. |
 | `` P `` | 태그를 push | Push the selected tag to a remote. You'll be prompted to select a remote. |
+| `` p `` | Pull tags | Fetch all tags from a remote. You'll be prompted to select a remote. |
 | `` g `` | 초기화 | View reset options (soft/mixed/hard) for resetting onto selected item. |
 | `` <ctrl+t> `` | Open external diff tool (git difftool) |  |
 | `` 0 `` | Focus main view |  |

@@ -617,6 +617,11 @@ type TranslationSet struct {
 	PushTagTitle                          string
 	PushTag                               string
 	PushTagTooltip                        string
+	PullTagsTitle                         string
+	PullTags                              string
+	PullTagsTooltip                       string
+	ForcePullTags                         string
+	ForcePullTagsPrompt                   string
 	NewTag                                string
 	NewTagTooltip                         string
 	CreatingTag                           string
@@ -1129,6 +1134,7 @@ type Actions struct {
 	DeleteLocalTag                   string
 	DeleteRemoteTag                  string
 	PushTag                          string
+	PullTags                         string
 	NukeWorkingTree                  string
 	DiscardUnstagedFileChanges       string
 	RemoveUntrackedFiles             string
@@ -1796,6 +1802,11 @@ func EnglishTranslationSet() *TranslationSet {
 		// Using 'push tag' rather than just 'push' to disambiguate from a global push
 		PushTag:                        "Push tag",
 		PushTagTooltip:                 "Push the selected tag to a remote. You'll be prompted to select a remote.",
+		PullTagsTitle:                  "Remote to pull tags from:",
+		PullTags:                       "Pull tags",
+		PullTagsTooltip:                "Fetch all tags from a remote. You'll be prompted to select a remote.",
+		ForcePullTags:                  "Force pull tags",
+		ForcePullTagsPrompt:            "One or more local tags have diverged from the remote's tags. Press {{.cancelKey}} to cancel, or {{.confirmKey}} to overwrite them with the remote's tags.",
 		NewTag:                         "New tag",
 		NewTagTooltip:                  "Create new tag from current commit. You'll be prompted to enter a tag name and optional description.",
 		CreatingTag:                    "Creating tag",
@@ -2259,6 +2270,7 @@ func EnglishTranslationSet() *TranslationSet {
 			DeleteLocalTag:                   "Delete local tag",
 			DeleteRemoteTag:                  "Delete remote tag",
 			PushTag:                          "Push tag",
+			PullTags:                         "Pull tags",
 			NukeWorkingTree:                  "Nuke working tree",
 			DiscardUnstagedFileChanges:       "Discard unstaged file changes",
 			RemoveUntrackedFiles:             "Remove untracked files",

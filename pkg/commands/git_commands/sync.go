@@ -131,3 +131,13 @@ func (self *SyncCommands) FetchRemote(task gocui.Task, remoteName string) error 
 
 	return self.cmd.New(cmdArgs).PromptOnCredentialRequest(task).Run()
 }
+
+func (self *SyncCommands) PullTags(task gocui.Task, remoteName string, force bool) error {
+	cmdArgs := self.fetchCommandBuilder(false).
+		Arg(remoteName).
+		Arg("--tags").
+		ArgIf(force, "--force").
+		ToArgv()
+
+	return self.cmd.New(cmdArgs).PromptOnCredentialRequest(task).Run()
+}

@@ -206,6 +206,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` w `` | 新しいワークツリー |  |
 | `` d `` | 削除 | ローカル/リモートタグの削除オプションを表示します。 |
 | `` P `` | タグをプッシュ | 選択したタグをリモートにプッシュします。リモートを選択するよう促されます。 |
+| `` p `` | Pull tags | Fetch all tags from a remote. You'll be prompted to select a remote. |
 | `` g `` | リセット | 選択した項目へのリセットオプション（ソフト/ミックス/ハード）を表示します。各リセットタイプの詳細は次の通りです：<br>- ソフトリセット：変更を保持し、ステージされた状態にします<br>- ミックスリセット：変更を保持し、ステージされていない状態にします<br>- ハードリセット：すべての変更を破棄します |
 | `` <ctrl+t> `` | 外部差分ツールを開く（git difftool） |  |
 | `` 0 `` | メインビューにフォーカス |  |

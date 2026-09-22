@@ -279,6 +279,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` w `` | 新建工作树 |  |
 | `` d `` | 删除 | 查看本地/远程标签的删除选项 |
 | `` P `` | 推送标签 | 推送选择的标签到远端。您将在弹窗中选择一个远端。 |
+| `` p `` | Pull tags | Fetch all tags from a remote. You'll be prompted to select a remote. |
 | `` g `` | 重置 | 查看重置选项 (soft/mixed/hard) 用于重置到选择项 |
 | `` <ctrl+t> `` | 使用外部差异比较工具(git difftool) |  |
 | `` 0 `` | 聚焦主视图 |  |

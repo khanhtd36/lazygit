@@ -315,6 +315,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` w `` | 新建工作樹 |  |
 | `` d `` | 刪除 | 檢視本機／遠端標籤的刪除選項。 |
 | `` P `` | 推送標籤 | 推送選擇的標籤到遠端。您將在彈窗中選擇一個遠端。 |
+| `` p `` | Pull tags | Fetch all tags from a remote. You'll be prompted to select a remote. |
 | `` g `` | 重設 | 檢視重置選項 (soft/mixed/hard) 用於重置到選擇項。 |
 | `` <ctrl+t> `` | 開啟外部差異工具 (git difftool) |  |
 | `` 0 `` | 聚焦主檢視 |  |
