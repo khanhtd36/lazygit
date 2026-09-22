@@ -1,0 +1,70 @@
+name: Fork release
+
+on:
+  push:
+    tags:
+      - "fork-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+      windows_asset_url: ${{ steps.version.outputs.windows_asset_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          # Trigger tags are namespaced "fork-v*" so they can never collide
+          # with upstream's own "v*" tags on this repo's other remote (see
+          # docs/adr/0001-fork-release-tag-prefix.md). Strip the "fork-"
+          # prefix to get a clean "vX.Y.Z" that goreleaser (and GitHub's
+          # release UI) expect.
+          TAG="${GITHUB_REF_NAME#fork-}"
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "windows_asset_url=https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/lazygit_${VERSION}_windows_x86_64.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: 1.25.x
+
+      - name: Run goreleaser
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: v2
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Publish under the clean "vX.Y.Z" tag instead of the pushed
+          # "fork-vX.Y.Z" trigger tag; see the "Determine version" step above.
+          GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.tag }}
+
+  winget:
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - name: Install wingetcreate
+        run: |
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+
+      - name: Submit winget manifest update
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          .\wingetcreate.exe update khanhtd36.lazygit-khanhtd36 `
+            --version "${{ needs.release.outputs.version }}" `
+            --urls "${{ needs.release.outputs.windows_asset_url }}" `
+            --submit `
+            --token "$env:WINGET_TOKEN"
