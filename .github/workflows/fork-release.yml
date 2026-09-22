@@ -34,6 +34,12 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "windows_asset_url=https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/lazygit_${VERSION}_windows_x86_64.zip" >> "$GITHUB_OUTPUT"
 
+          # goreleaser requires GORELEASER_CURRENT_TAG (set below) to name a
+          # real git tag at HEAD, not just a string override. Create it
+          # locally — no need to push it, GitHub auto-creates the tag ref
+          # when goreleaser creates the release under this name.
+          git tag "$TAG"
+
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
