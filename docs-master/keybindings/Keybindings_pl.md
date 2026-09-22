@@ -383,6 +383,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` w `` | Nowe drzewo pracy |  |
 | `` d `` | Usuń | Wyświetl opcje usuwania lokalnego/odległego tagu. |
 | `` P `` | Wyślij tag | Wyślij wybrany tag do zdalnego. Zostaniesz poproszony o wybranie zdalnego. |
+| `` p `` | Pull tags | Fetch all tags from a remote. You'll be prompted to select a remote. |
 | `` g `` | Reset | Wyświetl opcje resetu (miękki/mieszany/twardy) do wybranego elementu. |
 | `` <ctrl+t> `` | Otwórz zewnętrzne narzędzie różnic (git difftool) |  |
 | `` 0 `` | Focus main view |  |

@@ -211,6 +211,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` w `` | Nova árvore de trabalho |  |
 | `` d `` | Apagar | Ver opções de exclusão para tag local/remoto. |
 | `` P `` | Empurrar etiqueta | Push the selected tag to a remote. You'll be prompted to select a remote. |
+| `` p `` | Pull tags | Fetch all tags from a remote. You'll be prompted to select a remote. |
 | `` g `` | Restaurar | Ver opções de redefinição (soft/mixed/hard) para redefinir para o item selecionado. |
 | `` <ctrl+t> `` | Abrir ferramenta de diff externa (git difftool) |  |
 | `` 0 `` | Focar visualização principal |  |
