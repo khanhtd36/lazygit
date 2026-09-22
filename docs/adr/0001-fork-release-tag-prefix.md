@@ -1,0 +1,3 @@
+# Fork releases use a `fork-v*` tag prefix, not bare `v*`
+
+The local repo carries two remotes: `origin` (upstream `jesseduffield/lazygit`, which already owns ~1500 `vX.Y.Z` tags) and `fork` (`khanhtd36/lazygit`, where fork releases are published). If the fork release workflow triggered on bare `v*` tag pushes, any accidental push or sync of upstream's existing tags to `fork` would fire a release for each one. Tagging fork releases as `fork-v*` instead makes the two namespaces structurally disjoint — upstream never produces a `fork-v*` tag, so no push of upstream history can trigger the fork workflow. Mirrors the same convention already used in the sibling herdr fork (`E:/learn/herdr`).
