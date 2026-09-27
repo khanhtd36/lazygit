@@ -98,6 +98,20 @@ while still being meaningful and self-contained.
   in `just check` catches a missing one, so it has to be part of writing the
   message rather than something to notice afterwards.
 
+## Keep the README's fork-differences list current
+
+When a commit changes user-facing behavior and doesn't come from an
+upstream merge, update the "what's different in this fork" section of
+`README.md` as part of that same change, not as a separate follow-up.
+Several small commits that together produce one user-visible behavior
+(a feature plus its fixups) should still collapse to a single bullet
+there — don't add one bullet per commit or PR.
+
+Skip the update for commits that are process- or infrastructure-only
+(the release pipeline, install scripts, contributor tooling, this file):
+those aren't things a user of the fork would notice, and the section's
+closing sentence already says so explicitly.
+
 ## Iterate with `fixup!` commits
 
 When refining work that's already committed — adjusting an approach,

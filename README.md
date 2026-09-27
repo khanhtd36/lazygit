@@ -19,6 +19,12 @@
 - Always confirm before pushing the selected branch ([#3](https://github.com/khanhtd36/lazygit/pull/3))
 - Always prompt for the upstream when pushing the selected branch ([#4](https://github.com/khanhtd36/lazygit/pull/4))
 - fix(gocui): bail on UI thread and wait once MainLoop exits ([#5](https://github.com/khanhtd36/lazygit/pull/5))
+- Diffs and diffstats render correctly on Windows again — no more scrambled diff-line attribution, and a refresh no longer leaves git's index locked behind.
+- Diff and diffstat views fill the full width of the pane they're shown in, instead of wrapping to a fixed width.
+- Add a "Pull tags" action to the tags panel, to bring a remote's tags down without leaving lazygit.
+- Pushing a branch with no upstream configured now says a new remote-tracking branch will be created.
+
+This list covers behavior you'd notice while using lazygit day to day; repository/process-only differences (the release pipeline, install scripts, contributor tooling) aren't included here.
 
 ## install (this fork)
 
