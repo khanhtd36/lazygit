@@ -4,9 +4,9 @@ A terminal UI for git commands, wrapping the git CLI to give a fast, keyboard-dr
 
 ## Language
 
-**Pull tag**:
+**Pull tags**:
 A Tags-panel action that runs `git fetch <remote> --tags` to bring *all* tags from a chosen remote up to date locally — not an action on any single selected tag. Add/update only: never deletes a local tag whose remote counterpart was removed. On a non-fast-forward conflict (a local tag points elsewhere than the remote's), prompts once to retry the whole fetch with `--force`, applying to every conflicting tag in that batch, not per-tag.
-_Avoid_: Fetch tag, sync tag, update tag
+_Avoid_: Pull tag (singular — the action always operates on the whole remote tag set, never one tag), Fetch tag, sync tag, update tag
 
 **Fork release**:
 A tagged build+publish run of `khanhtd36/lazygit` (the `fork` remote), triggered by pushing a `fork-v*` tag (e.g. `fork-v0.65.2`). Runs goreleaser against `.goreleaser.yml`, publishes a GitHub Release on `khanhtd36/lazygit`, and submits an update to the fork winget package. Distinct namespace from upstream's own `vX.Y.Z` tags (on `origin` = `jesseduffield/lazygit`) precisely so pushing/syncing upstream tags can never accidentally trigger it.
