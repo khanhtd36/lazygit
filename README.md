@@ -34,6 +34,10 @@ irm https://lazygit.khanhtd36.dev/install.ps1 | iex
 winget install khanhtd36.lazygit-khanhtd36
 ```
 
+```sh
+brew install khanhtd36/tap/lazygit-khanhtd36
+```
+
 Binaries and checksums: [releases](https://github.com/khanhtd36/lazygit/releases).
 
 ## docs
