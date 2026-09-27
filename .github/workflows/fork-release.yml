@@ -78,3 +78,51 @@ jobs:
             --urls "${{ needs.release.outputs.windows_asset_url }}" `
             --submit `
             --token "$env:WINGET_TOKEN"
+
+  homebrew:
+    needs: release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v7
+        with:
+          repository: khanhtd36/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Bump formula
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          # The formula pins one sha256 per macOS arch, so both archives
+          # need fetching even though a given runner only tests one.
+          arm64_url="https://github.com/khanhtd36/lazygit/releases/download/${TAG}/lazygit_${VERSION}_darwin_arm64.tar.gz"
+          amd64_url="https://github.com/khanhtd36/lazygit/releases/download/${TAG}/lazygit_${VERSION}_darwin_x86_64.tar.gz"
+          arm64_sha=$(curl -sL "$arm64_url" | shasum -a 256 | cut -d' ' -f1)
+          amd64_sha=$(curl -sL "$amd64_url" | shasum -a 256 | cut -d' ' -f1)
+
+          formula=Formula/lazygit-khanhtd36.rb
+          sed -i '' \
+            -e "s|version \".*\"|version \"${VERSION}\"|" \
+            -e "s|releases/download/v[^/]*/lazygit_[^_]*_darwin_arm64\.tar\.gz|releases/download/${TAG}/lazygit_${VERSION}_darwin_arm64.tar.gz|" \
+            -e "s|releases/download/v[^/]*/lazygit_[^_]*_darwin_x86_64\.tar\.gz|releases/download/${TAG}/lazygit_${VERSION}_darwin_x86_64.tar.gz|" \
+            "$formula"
+          # Replace the sha256 that follows each url line, matched by
+          # arch-specific context since the two shas would otherwise be
+          # indistinguishable to a blind substitution.
+          awk -v arm="$arm64_sha" -v amd="$amd64_sha" '
+            /darwin_arm64/ { arch = "arm" }
+            /darwin_x86_64/ { arch = "amd" }
+            /sha256/ && arch == "arm" { sub(/sha256 ".*"/, "sha256 \"" arm "\""); arch = "" }
+            /sha256/ && arch == "amd" { sub(/sha256 ".*"/, "sha256 \"" amd "\""); arch = "" }
+            { print }
+          ' "$formula" > "$formula.tmp"
+          mv "$formula.tmp" "$formula"
+
+      - name: Commit and push
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          git -c user.name="khanhtd36-bot" -c user.email="khanhtd36@gmail.com" \
+            commit -am "Update lazygit-khanhtd36 to ${VERSION}"
+          git push
