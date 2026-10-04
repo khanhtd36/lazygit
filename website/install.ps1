@@ -3,6 +3,10 @@ param(
     [string]$InstallDir = $env:LAZYGIT_INSTALL_DIR
 )
 
+# Everything runs in its own script block: `irm | iex` executes in the
+# caller's session, so strict mode and the error preference would otherwise
+# stay switched on in the user's shell, and `exit` would close it.
+& {
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
@@ -16,8 +20,7 @@ function Write-Step {
 }
 
 if ($env:OS -ne "Windows_NT") {
-    Write-Error "install.ps1 supports Windows only. Use install.sh on Linux or macOS."
-    exit 1
+    throw "install.ps1 supports Windows only. Use install.sh on Linux or macOS."
 }
 
 # Only x86_64 is shipped; it also runs fine under emulation on ARM64 Windows.
@@ -25,8 +28,7 @@ $architecture = [System.Runtime.InteropServices.RuntimeInformation,mscorlib]::OS
 if ($architecture -eq "Arm64") {
     Write-Step "Windows ARM64 detected; installing the x86_64 build under Windows emulation."
 } elseif ($architecture -ne "X64") {
-    Write-Error "Unsupported Windows architecture: $architecture"
-    exit 1
+    throw "Unsupported Windows architecture: $architecture"
 }
 
 if ([string]::IsNullOrWhiteSpace($InstallDir)) {
@@ -82,18 +84,54 @@ try {
 
 Write-Step "Installed lazygit $version to $InstallDir\$Bin"
 
-$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
-$pathEntries = @()
-if (-not [string]::IsNullOrWhiteSpace($userPath)) {
-    $pathEntries = $userPath.Split(";", [System.StringSplitOptions]::RemoveEmptyEntries)
-}
-if (-not ($pathEntries | Where-Object { $_.TrimEnd("\") -ieq $InstallDir.TrimEnd("\") })) {
-    $newUserPath = if ([string]::IsNullOrWhiteSpace($userPath)) { $InstallDir } else { "$userPath;$InstallDir" }
-    [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
-    Write-Step "Added $InstallDir to your User PATH. Open a new PowerShell window to use 'lazygit'."
-} else {
-    Write-Step "$InstallDir is already on your User PATH."
+# Add the install folder to the User PATH without flattening it: read the
+# raw registry value (so %VAR% entries stay unexpanded), keep its value
+# type, and save the old value to a backup file before writing.
+function Add-ToUserPath {
+    param([string]$Dir)
+
+    $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey("Environment", $true)
+    try {
+        $raw = [string]$key.GetValue("Path", "", [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+        $kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
+        if ($key.GetValueNames() -contains "Path") {
+            $kind = $key.GetValueKind("Path")
+        }
+
+        $entries = $raw.Split(";", [System.StringSplitOptions]::RemoveEmptyEntries)
+        $already = $entries | Where-Object {
+            [Environment]::ExpandEnvironmentVariables($_).TrimEnd("\") -ieq $Dir.TrimEnd("\")
+        }
+        if ($already) {
+            Write-Step "$Dir is already on your User PATH."
+            return
+        }
+
+        $backupDir = Join-Path $env:LOCALAPPDATA "lazygit"
+        New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
+        $backup = Join-Path $backupDir ("path-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".txt")
+        Set-Content -LiteralPath $backup -Value $raw -Encoding UTF8
+        Write-Step "Saved your previous User PATH to $backup"
+
+        $new = if ([string]::IsNullOrWhiteSpace($raw)) { $Dir } else { $raw.TrimEnd(";") + ";" + $Dir }
+        $key.SetValue("Path", $new, $kind)
+    } finally {
+        $key.Close()
+    }
+
+    # Tell running programs (Explorer, new terminals) that the environment changed.
+    if (-not ("LazygitInstall.Env" -as [type])) {
+        Add-Type -Namespace "LazygitInstall" -Name "Env" -MemberDefinition @'
+[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+'@
+    }
+    $result = [UIntPtr]::Zero
+    [void][LazygitInstall.Env]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero, "Environment", 2, 5000, [ref]$result)
+    Write-Step "Added $Dir to your User PATH. Open a new PowerShell window to use 'lazygit'."
 }
 
+Add-ToUserPath -Dir $InstallDir
 $env:Path = "$env:Path;$InstallDir"
 Write-Host "lazygit $version installed successfully."
+}
