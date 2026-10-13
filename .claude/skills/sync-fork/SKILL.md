@@ -1,6 +1,6 @@
 ---
 name: sync-fork
-description: Sync this fork's master with upstream/master, verify, and push — then report. Invoke by hand as /sync-fork.
+description: Sync this fork's master with upstream jesseduffield/lazygit, verify, and push — then report. Invoke by hand as /sync-fork.
 disable-model-invocation: true
 allowed-tools: Bash(git:*) Bash(just:*) Bash(gh:*)
 ---
@@ -11,46 +11,59 @@ the report.
 
 ## 1. Preflight
 
-Confirm the current branch is `master` and `git status --porcelain` is empty.
-Either check fails → stop, tell the user which one and why, skip everything
-else including push, then go straight to the Report with the other
+Confirm the current branch is `master`, `git status --porcelain` is empty, and
+`git remote -v` shows `fork` → `khanhtd36/lazygit` and `origin` →
+`jesseduffield/lazygit` (the layout `CONTEXT.md` documents: `origin` is
+upstream here). Any check fails → stop, tell the user which one and why, skip
+everything else including push, then go straight to the Report with the other
 sections marked not reached.
 
-## 2. Fetch
+## 2. Sync with fork
 
-`git fetch upstream`. Run `git log --oneline master..upstream/master` and keep
-its output verbatim as the **changelog** — one line per upstream commit about
-to be merged in.
+`GH_CONFIG_DIR="$HOME/.config/gh-khanhtd36" git pull --ff-only fork master`.
+Done when `git merge-base --is-ancestor fork/master master` succeeds: local
+`master` holds everything on `fork`. Work also happens from other machines,
+so a stale `master` means merging against old code and a rejected push.
+Local commits ahead of `fork` are fine. Not a fast-forward (both sides have
+new commits) → stop, list each side's commits, skip everything else, and go
+straight to the Report.
+
+## 3. Fetch upstream
+
+`git fetch origin master`. Run `git log --oneline master..origin/master` and
+keep its output verbatim as the **changelog** — one line per upstream commit
+about to be merged in.
 
 Empty output → nothing to merge. Skip straight to the Report: changelog is
 "up to date, nothing to merge", conflict resolution and verify/push status are
 "not reached".
 
-## 3. Merge
+## 4. Merge
 
-`git merge upstream/master --no-edit`.
+`git merge origin/master --no-edit`.
 
 On conflict: stop immediately. Do not resolve it. Leave the merge in
 progress exactly as git left it. Run `git diff --name-only --diff-filter=U`
 and keep that file list for the report. Skip build/test/push.
 
-## 4. Verify
+## 5. Verify
 
 `just build`, then `just unit-test`. If either fails, stop before push. Keep the failing
 command and the tail of its output for the report.
 
-## 5. Push
+## 6. Push
 
-`git push` on `origin` first. If that fails or hangs, fall back to:
+`GH_CONFIG_DIR="$HOME/.config/gh-khanhtd36" git push fork master`. If that
+fails or hangs, fall back to:
 
 ```
-git push https://github.com/khanhtd36/lazygit.git master:master
+GH_CONFIG_DIR="$HOME/.config/gh-khanhtd36" git push https://github.com/khanhtd36/lazygit.git master:master
 ```
 
-(this repo's `gh` login provides the HTTPS credential, bypassing the SSH
+(the personal `gh` login provides the HTTPS credential, bypassing the SSH
 agent). Record which of the two actually succeeded.
 
-## 6. Report
+## 7. Report
 
 Always end with exactly these three sections, in this order, regardless of
 where the pipeline stopped:
