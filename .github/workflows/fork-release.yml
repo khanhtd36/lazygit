@@ -9,7 +9,49 @@ permissions:
   contents: write
 
 jobs:
+  ci-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    timeout-minutes: 45
+    steps:
+      - name: Require green CI jobs on the tagged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Integration Tests are left out until they pass on the fork again;
+          # add them back here once they do.
+          REQUIRED_JOBS: "ci - ubuntu-latest,ci - windows-latest,build,check-codebase,lint"
+        run: |
+          # Only publish commits whose push-to-master CI passed. CI starts on
+          # the same push as the tag, so wait for it to finish first.
+          for _ in $(seq 1 40); do
+            run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+              --commit "$GITHUB_SHA" --event push --limit 1 \
+              --json databaseId,status,url --jq '.[0] // empty')
+            if [ -n "$run" ] && [ "$(jq -r .status <<<"$run")" = completed ]; then
+              echo "ci.yml run: $(jq -r .url <<<"$run")"
+              jobs=$(gh run view "$(jq -r .databaseId <<<"$run")" --repo "$GITHUB_REPOSITORY" \
+                --json jobs --jq '.jobs[] | "\(.name)\t\(.conclusion)"')
+              failed=0
+              IFS=, read -ra required <<<"$REQUIRED_JOBS"
+              for job in "${required[@]}"; do
+                conclusion=$(awk -F'\t' -v j="$job" '$1 == j { print $2 }' <<<"$jobs")
+                echo "$job: ${conclusion:-missing}"
+                [ "$conclusion" = success ] || failed=1
+              done
+              [ "$failed" = 0 ] || {
+                echo "error: required CI jobs did not pass on $GITHUB_SHA"
+                exit 1
+              }
+              exit 0
+            fi
+            sleep 60
+          done
+          echo "error: no completed ci.yml push run for $GITHUB_SHA after 40 minutes"
+          exit 1
+
   release:
+    needs: ci-gate
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.version.outputs.tag }}
