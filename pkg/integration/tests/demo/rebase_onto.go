@@ -69,7 +69,13 @@ var RebaseOnto = NewIntegrationTest(NewIntegrationTestArgs{
 					Confirm()
 			}).
 			Wait(1000).
+			NavigateToLine(Contains("feature/demo")).
 			Press(keys.Universal.Push).
+			Tap(func() {
+				t.ExpectPopup().Prompt().
+					Title(Contains("Enter upstream as")).
+					Confirm()
+			}).
 			Tap(func() {
 				t.ExpectPopup().Confirmation().
 					Title(Contains("Force push")).
