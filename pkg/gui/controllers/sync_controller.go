@@ -359,10 +359,9 @@ func (self *SyncController) PullBranch(branch *models.Branch, worktree *models.W
 	}
 
 	opts := PullFilesOptions{
-		Action:            action,
-		WorktreeGitDir:    worktreeGitDir,
-		WorktreePath:      worktreePath,
-		IsCurrentWorktree: worktree.IsCurrent,
+		Action:         action,
+		WorktreeGitDir: worktreeGitDir,
+		WorktreePath:   worktreePath,
 	}
 
 	if !branch.IsTrackingRemote() {
@@ -412,8 +411,6 @@ type PullFilesOptions struct {
 	// current worktree.
 	WorktreeGitDir string
 	WorktreePath   string
-	// False whenever WorktreeGitDir/WorktreePath are set.
-	IsCurrentWorktree bool
 
 	// Branches stacked below the current one, updated to their upstream
 	// branches before the current one is pulled
@@ -461,7 +458,7 @@ func (self *SyncController) pullWithLock(task gocui.Task, opts PullFilesOptions)
 		},
 	)
 
-	if !opts.IsCurrentWorktree {
+	if opts.WorktreeGitDir != "" {
 		// We're not looking at this worktree, so we can't drop the user into
 		// an interactive rebase/merge-conflict resolution flow for it - that
 		// UI operates on the currently open worktree. Report the failure
