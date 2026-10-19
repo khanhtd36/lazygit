@@ -23,6 +23,7 @@
 - Diff and diffstat views fill the full width of the pane they're shown in, instead of wrapping to a fixed width.
 - Add a "Pull tags" action to the tags panel, to bring a remote's tags down without leaving lazygit.
 - Pushing a branch with no upstream configured now says a new remote-tracking branch will be created.
+- Update lazygit from this fork's releases, from the TUI or with `lazygit update`, including on Windows; copies installed with Homebrew, winget, `go install` or Nix point you at their package manager instead.
 
 This list covers behavior you'd notice while using lazygit day to day; repository/process-only differences (the release pipeline, install scripts, contributor tooling) aren't included here.
 
