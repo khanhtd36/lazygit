@@ -19,5 +19,13 @@ _Avoid_: install script (singular — there are two, one per platform)
 **Install site**:
 `lazygit.khanhtd36.dev`, a GitHub Pages deployment of `website/` on `khanhtd36/lazygit`, hosting the installer scripts. DNS delegation done by user; GitHub Pages custom-domain config is the remaining piece.
 
+**Self-update**:
+Replacing the running lazygit binary with the latest **Fork release**, from the GitHub Releases of `khanhtd36/lazygit` only (upstream is never consulted). Reachable as the `lazygit update` command, as a startup check governed by `update.method`, and as the `u` key in the TUI. Only plain `X.Y.Z` versions are comparable; a build with no version never sees updates. Never restarts lazygit itself.
+_Avoid_: upgrade, auto-update (an update is never installed without the user asking or confirming, except `update.method: background`)
+
+**Managed install**:
+A lazygit binary owned by a package manager (Homebrew, winget, `go install`, Nix), recognised by its executable path. **Self-update** refuses to replace it and shows that package manager's own upgrade command instead.
+_Avoid_: package install, system install
+
 **Fork winget package**:
 `khanhtd36.lazygit-khanhtd36` — a winget-pkgs manifest submitted (via `wingetcreate.exe update ... --submit`) on each fork release, using the `WINGET_TOKEN` repo secret (added per-repo manually; `khanhtd36` is a personal account, not an org, so secrets don't share across repos).
