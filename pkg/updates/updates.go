@@ -189,6 +189,10 @@ func (u *Updater) checkForNewUpdate() (string, error) {
 		return "", errors.New(errMessage)
 	}
 
+	if err := u.checkNotManaged(); err != nil {
+		return "", err
+	}
+
 	if _, ok := rel.assetURL(u.archiveName(newVersion)); !ok {
 		errMessage := utils.ResolvePlaceholderString(
 			u.Tr.CouldNotFindBinaryErr, map[string]string{
@@ -278,6 +282,10 @@ func (u *Updater) archiveName(version string) string {
 
 // Update downloads the latest binary and replaces the current binary with it
 func (u *Updater) Update(newVersion string) error {
+	if err := u.checkNotManaged(); err != nil {
+		return err
+	}
+
 	rel, err := u.getRelease("tags/" + newVersion)
 	if err != nil {
 		return err
@@ -373,4 +381,32 @@ func download(url, destPath string) error {
 	}
 
 	return out.Close()
+}
+
+// Fails with a message saying how to update, if the running binary belongs to
+// a package manager.
+func (u *Updater) checkNotManaged() error {
+	binaryPath, err := osext.Executable()
+	if err != nil {
+		return err
+	}
+
+	return u.managedInstallErr(binaryPath)
+}
+
+func (u *Updater) managedInstallErr(binaryPath string) error {
+	manager := managerOf(binaryPath)
+	if manager == nil {
+		return nil
+	}
+
+	message := u.Tr.ManagedInstallNoCmdErr
+	if manager.upgradeCommand != "" {
+		message = u.Tr.ManagedInstallErr
+	}
+
+	return errors.New(utils.ResolvePlaceholderString(message, map[string]string{
+		"manager": manager.name,
+		"command": manager.upgradeCommand,
+	}))
 }
