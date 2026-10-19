@@ -16,7 +16,6 @@ import (
 
 	"github.com/kardianos/osext"
 
-	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/common"
 	"github.com/jesseduffield/lazygit/pkg/config"
 	"github.com/jesseduffield/lazygit/pkg/utils"
@@ -28,8 +27,7 @@ const forkRepo = "khanhtd36/lazygit"
 // Updater checks for updates and does updates
 type Updater struct {
 	*common.Common
-	Config    config.AppConfigurer
-	OSCommand *oscommands.OSCommand
+	Config config.AppConfigurer
 
 	// These are fields so that tests can point the updater at a fake server and
 	// pretend to run on another platform.
@@ -63,14 +61,13 @@ func (r release) assetURL(name string) (string, bool) {
 }
 
 // NewUpdater creates a new updater
-func NewUpdater(cmn *common.Common, config config.AppConfigurer, osCommand *oscommands.OSCommand) (*Updater, error) {
+func NewUpdater(cmn *common.Common, config config.AppConfigurer) (*Updater, error) {
 	return &Updater{
-		Common:    cmn,
-		Config:    config,
-		OSCommand: osCommand,
-		apiBase:   "https://api.github.com",
-		goos:      runtime.GOOS,
-		goarch:    runtime.GOARCH,
+		Common:  cmn,
+		Config:  config,
+		apiBase: "https://api.github.com",
+		goos:    runtime.GOOS,
+		goarch:  runtime.GOARCH,
 	}, nil
 }
 
@@ -288,16 +285,13 @@ func (u *Updater) archiveName(version string) string {
 
 // Update downloads the latest binary and replaces the current binary with it
 func (u *Updater) Update(newVersion string) error {
-	return u.update(newVersion)
-}
-
-func (u *Updater) update(newVersion string) error {
 	rel, err := u.getRelease("tags/" + newVersion)
 	if err != nil {
 		return err
 	}
 
-	rawUrl, ok := rel.assetURL(u.archiveName(newVersion))
+	archiveName := u.archiveName(newVersion)
+	archiveURL, ok := rel.assetURL(archiveName)
 	if !ok {
 		return errors.New(utils.ResolvePlaceholderString(
 			u.Tr.CouldNotFindBinaryErr, map[string]string{
@@ -306,78 +300,84 @@ func (u *Updater) update(newVersion string) error {
 		))
 	}
 
-	u.Log.Info("Updating with url " + rawUrl)
-	return u.downloadAndInstall(rawUrl)
-}
-
-func (u *Updater) downloadAndInstall(rawUrl string) error {
-	configDir := u.Config.GetUserConfigDir()
-	u.Log.Info("Download directory is " + configDir)
-
-	zipPath := filepath.Join(configDir, "temp_lazygit."+u.zipExtension())
-	u.Log.Info("Temp path to tarball/zip file is " + zipPath)
-
-	// remove existing zip file
-	if err := os.RemoveAll(zipPath); err != nil && !os.IsNotExist(err) {
-		return err
+	checksumsURL, ok := rel.assetURL("checksums.txt")
+	if !ok {
+		return fmt.Errorf("release %s has no checksums.txt", newVersion)
 	}
 
-	// Create the zip file
-	out, err := os.Create(zipPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(rawUrl)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Check server response
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error while trying to download latest lazygit: %s", resp.Status)
-	}
-
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	u.Log.Info("untarring tarball/unzipping zip file")
-	err = u.OSCommand.Cmd.New([]string{"tar", "-zxf", zipPath, "lazygit"}).Run()
-	if err != nil {
-		return err
-	}
-
-	// the `tar` terminal cannot store things in a new location without permission
-	// so it creates it in the current directory. As such our path is fairly simple.
-	// You won't see it because it's gitignored.
-	tempLazygitFilePath := "lazygit"
-
-	u.Log.Infof("Path to temp binary is %s", tempLazygitFilePath)
-
-	// get the path of the current binary
 	binaryPath, err := osext.Executable()
 	if err != nil {
 		return err
 	}
 	u.Log.Info("Binary path is " + binaryPath)
 
-	// Verify the main file exists
-	if _, err := os.Stat(zipPath); err != nil {
+	tempDir, err := os.MkdirTemp("", "lazygit-update-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tempDir)
+
+	archivePath := filepath.Join(tempDir, archiveName)
+	u.Log.Info("Downloading " + archiveURL)
+	if err := download(archiveURL, archivePath); err != nil {
 		return err
 	}
 
-	// swap out the old binary for the new one
-	err = os.Rename(tempLazygitFilePath, binaryPath)
+	checksumsPath := filepath.Join(tempDir, "checksums.txt")
+	if err := download(checksumsURL, checksumsPath); err != nil {
+		return err
+	}
+	checksums, err := os.ReadFile(checksumsPath)
 	if err != nil {
+		return err
+	}
+	if err := verifyChecksum(archivePath, archiveName, string(checksums)); err != nil {
+		return err
+	}
+
+	// Next to the binary, so that replacing it never crosses file systems
+	newBinaryPath := binaryPath + ".new"
+	if err := extractBinary(archivePath, u.binaryName(), newBinaryPath); err != nil {
+		return err
+	}
+
+	if err := replaceBinary(binaryPath, newBinaryPath); err != nil {
+		os.Remove(newBinaryPath)
 		return err
 	}
 	u.Log.Info("Update complete!")
 
 	return nil
+}
+
+func (u *Updater) binaryName() string {
+	if u.goos == "windows" {
+		return "lazygit.exe"
+	}
+
+	return "lazygit"
+}
+
+func download(url, destPath string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error while trying to download %s: %s", url, resp.Status)
+	}
+
+	out, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		out.Close()
+		return err
+	}
+
+	return out.Close()
 }
