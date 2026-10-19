@@ -24,6 +24,16 @@ import (
 // The fork's releases are the only source of updates; upstream is never consulted.
 const forkRepo = "khanhtd36/lazygit"
 
+// UpToDateError is returned by a check that finds nothing newer than the
+// running version, which callers may not want to treat as a failure.
+type UpToDateError struct {
+	message string
+}
+
+func (e *UpToDateError) Error() string {
+	return e.message
+}
+
 // Updater checks for updates and does updates
 type Updater struct {
 	*common.Common
@@ -176,7 +186,7 @@ func (u *Updater) checkForNewUpdate() (string, error) {
 	u.Log.Info("New version is " + newVersion)
 
 	if !isNewer(newVersion, currentVersion) {
-		return "", errors.New(u.Tr.OnLatestVersionErr)
+		return "", &UpToDateError{u.Tr.OnLatestVersionErr}
 	}
 
 	if u.majorVersionDiffers(currentVersion, newVersion) {

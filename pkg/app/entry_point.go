@@ -176,6 +176,10 @@ func Start(buildInfo *BuildInfo, integrationTest integrationTypes.IntegrationTes
 		})
 	}
 
+	if cliArgs.GitArg == "update" {
+		selfUpdate(appConfig, common)
+	}
+
 	parsedGitArg := parseGitArg(cliArgs.GitArg)
 
 	Run(appConfig, common, appTypes.NewStartArgs(cliArgs.FilterPath, parsedGitArg, cliArgs.ScreenMode, integrationTest))
@@ -191,7 +195,7 @@ func parseCliArgsAndEnvVars() *cliArgs {
 	flaggy.String(&filterPath, "f", "filter", "Path to filter on in `git log -- <path>`. When in filter mode, the commits, reflog, and stash are filtered based on the given path, and some operations are restricted")
 
 	gitArg := ""
-	flaggy.AddPositionalValue(&gitArg, "git-arg", 1, false, "Panel to focus upon opening lazygit. Accepted values (based on git terminology): status, branch, log, stash. Ignored if --filter arg is passed.")
+	flaggy.AddPositionalValue(&gitArg, "git-arg", 1, false, "Panel to focus upon opening lazygit. Accepted values (based on git terminology): status, branch, log, stash. Ignored if --filter arg is passed. The value 'update' instead updates lazygit itself.")
 
 	printVersionInfo := false
 	flaggy.Bool(&printVersionInfo, "v", "version", "Print the current version")

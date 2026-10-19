@@ -281,6 +281,7 @@ type TranslationSet struct {
 	UpdateCompleted                       string
 	FailedToRetrieveLatestVersionErr      string
 	OnLatestVersionErr                    string
+	UpdatingToVersion                     string
 	ManagedInstallErr                     string
 	ManagedInstallNoCmdErr                string
 	MajorVersionErr                       string
@@ -1508,6 +1509,7 @@ func EnglishTranslationSet() *TranslationSet {
 		UpdateCompleted:                      "Update has been installed successfully. Restart lazygit for it to take effect.",
 		FailedToRetrieveLatestVersionErr:     "Failed to retrieve version information",
 		OnLatestVersionErr:                   "You already have the latest version",
+		UpdatingToVersion:                    "Updating to {{.newVersion}}...",
 		ManagedInstallErr:                    "lazygit was installed with {{.manager}}, which has to update it. Run: {{.command}}",
 		ManagedInstallNoCmdErr:               "lazygit was installed with {{.manager}}, which has to update it.",
 		MajorVersionErr:                      "New version ({{.newVersion}}) has non-backwards compatible changes compared to the current version ({{.currentVersion}})",
