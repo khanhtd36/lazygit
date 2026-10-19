@@ -216,13 +216,6 @@ func (u *Updater) CheckForNewUpdate(onFinish func(string, error) error, userRequ
 }
 
 func (u *Updater) skipUpdateCheck() bool {
-	// will remove the check for windows after adding a manifest file asking for
-	// the required permissions
-	if u.goos == "windows" {
-		u.Log.Info("Updating is currently not supported for windows until we can fix permission issues")
-		return true
-	}
-
 	if u.Config.GetVersion() == "unversioned" {
 		u.Log.Info("Current version is not built from an official release so we won't check for an update")
 		return true

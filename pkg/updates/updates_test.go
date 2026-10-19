@@ -210,18 +210,21 @@ func TestCheckForNewUpdateServerError(t *testing.T) {
 func TestSkipUpdateCheck(t *testing.T) {
 	scenarios := []struct {
 		name        string
+		goos        string
 		version     string
 		buildSource string
 		expected    bool
 	}{
-		{"goreleaser build", "0.65.1", "binaryRelease", false},
-		{"source build", "unversioned", "binaryRelease", true},
-		{"other build source", "0.65.1", "buildBinary", true},
+		{"goreleaser build", "linux", "0.65.1", "binaryRelease", false},
+		{"windows", "windows", "0.65.1", "binaryRelease", false},
+		{"source build", "linux", "unversioned", "binaryRelease", true},
+		{"other build source", "linux", "0.65.1", "buildBinary", true},
 	}
 
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			updater := newTestUpdater("", s.version)
+			updater.goos = s.goos
 			updater.Config.(*fakeConfig).buildSource = s.buildSource
 
 			assert.Equal(t, s.expected, updater.skipUpdateCheck())

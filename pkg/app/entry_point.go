@@ -21,6 +21,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/env"
 	integrationTypes "github.com/jesseduffield/lazygit/pkg/integration/types"
 	"github.com/jesseduffield/lazygit/pkg/logs/tail"
+	"github.com/jesseduffield/lazygit/pkg/updates"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
@@ -101,6 +102,8 @@ func Start(buildInfo *BuildInfo, integrationTest integrationTypes.IntegrationTes
 		daemon.Handle(logger)
 		return
 	}
+
+	updates.Cleanup()
 
 	if cliArgs.PrintVersionInfo {
 		gitVersion := getGitVersionInfo()
