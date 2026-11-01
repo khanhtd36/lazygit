@@ -12,25 +12,25 @@ the report.
 ## 1. Preflight
 
 Confirm the current branch is `master`, `git status --porcelain` is empty, and
-`git remote -v` shows `fork` → `khanhtd36/lazygit` and `origin` →
-`jesseduffield/lazygit` (the layout `CONTEXT.md` documents: `origin` is
+`git remote -v` shows `origin` → `khanhtd36/lazygit` and `upstream` →
+`jesseduffield/lazygit` (the layout `CONTEXT.md` documents: `upstream` is
 upstream here). Any check fails → stop, tell the user which one and why, skip
 everything else including push, then go straight to the Report with the other
 sections marked not reached.
 
 ## 2. Sync with fork
 
-`GH_CONFIG_DIR="$HOME/.config/gh-khanhtd36" git pull --ff-only fork master`.
-Done when `git merge-base --is-ancestor fork/master master` succeeds: local
-`master` holds everything on `fork`. Work also happens from other machines,
+`GH_CONFIG_DIR="$HOME/.config/gh-khanhtd36" git pull --ff-only origin master`.
+Done when `git merge-base --is-ancestor origin/master master` succeeds: local
+`master` holds everything on `origin`. Work also happens from other machines,
 so a stale `master` means merging against old code and a rejected push.
-Local commits ahead of `fork` are fine. Not a fast-forward (both sides have
+Local commits ahead of `origin` are fine. Not a fast-forward (both sides have
 new commits) → stop, list each side's commits, skip everything else, and go
 straight to the Report.
 
 ## 3. Fetch upstream
 
-`git fetch origin master`. Run `git log --oneline master..origin/master` and
+`git fetch upstream master`. Run `git log --oneline master..upstream/master` and
 keep its output verbatim as the **changelog** — one line per upstream commit
 about to be merged in.
 
@@ -40,7 +40,7 @@ Empty output → nothing to merge. Skip straight to the Report: changelog is
 
 ## 4. Merge
 
-`git merge origin/master --no-edit`.
+`git merge upstream/master --no-edit`.
 
 On conflict: stop immediately. Do not resolve it. Leave the merge in
 progress exactly as git left it. Run `git diff --name-only --diff-filter=U`
@@ -53,7 +53,7 @@ command and the tail of its output for the report.
 
 ## 6. Push
 
-`GH_CONFIG_DIR="$HOME/.config/gh-khanhtd36" git push fork master`. If that
+`GH_CONFIG_DIR="$HOME/.config/gh-khanhtd36" git push origin master`. If that
 fails or hangs, fall back to:
 
 ```

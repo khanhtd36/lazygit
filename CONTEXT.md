@@ -9,7 +9,7 @@ A Tags-panel action that runs `git fetch <remote> --tags` to bring *all* tags fr
 _Avoid_: Pull tag (singular — the action always operates on the whole remote tag set, never one tag), Fetch tag, sync tag, update tag
 
 **Fork release**:
-A tagged build+publish run of `khanhtd36/lazygit` (the `fork` remote), triggered by pushing a `fork-v*` tag (e.g. `fork-v0.65.2`). Runs goreleaser against `.goreleaser.yml`, publishes a GitHub Release on `khanhtd36/lazygit`, and submits an update to the fork winget package. Distinct namespace from upstream's own `vX.Y.Z` tags (on `origin` = `jesseduffield/lazygit`) precisely so pushing/syncing upstream tags can never accidentally trigger it.
+A tagged build+publish run of `khanhtd36/lazygit` (the `origin` remote), triggered by pushing a `fork-v*` tag (e.g. `fork-v0.65.2`). Runs goreleaser against `.goreleaser.yml`, publishes a GitHub Release on `khanhtd36/lazygit`, and submits an update to the fork winget package. Distinct namespace from upstream's own `vX.Y.Z` tags (on `upstream` = `jesseduffield/lazygit`) precisely so pushing/syncing upstream tags can never accidentally trigger it.
 _Avoid_: release (ambiguous — could mean upstream's release), build
 
 **Installer scripts**:
