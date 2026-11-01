@@ -143,6 +143,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | Key | Action | Info |
 |-----|--------|-------------|
 | `` <ctrl+o> `` | Copy abbreviated commit hash to clipboard |  |
+| `` b `` | Просмотреть параметры бинарного поиска |  |
 | `` <space> `` | Переключить | Checkout the selected commit as a detached HEAD. |
 | `` y `` | Скопировать атрибут коммита | Copy commit attribute to clipboard (e.g. hash, URL, diff, message, author). |
 | `` o `` | Открыть коммит в браузере |  |
@@ -205,6 +206,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | Key | Action | Info |
 |-----|--------|-------------|
 | `` <ctrl+o> `` | Скопировать название ветки в буфер обмена |  |
+| `` b `` | Просмотреть параметры бинарного поиска |  |
 | `` i `` | Показать параметры git-flow |  |
 | `` <space> `` | Переключить | Checkout selected item. |
 | `` n `` | Новая ветка |  |
@@ -254,6 +256,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | Key | Action | Info |
 |-----|--------|-------------|
 | `` <ctrl+o> `` | Copy abbreviated commit hash to clipboard |  |
+| `` b `` | Просмотреть параметры бинарного поиска |  |
 | `` <space> `` | Переключить | Checkout the selected commit as a detached HEAD. |
 | `` y `` | Скопировать атрибут коммита | Copy commit attribute to clipboard (e.g. hash, URL, diff, message, author). |
 | `` o `` | Открыть коммит в браузере |  |
@@ -327,6 +330,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | Key | Action | Info |
 |-----|--------|-------------|
 | `` <ctrl+o> `` | Copy tag to clipboard |  |
+| `` b `` | Просмотреть параметры бинарного поиска |  |
 | `` <space> `` | Переключить | Checkout the selected tag as a detached HEAD. |
 | `` n `` | Создать тег | Create new tag from current commit. You'll be prompted to enter a tag name and optional description. |
 | `` w `` | New worktree |  |
@@ -354,6 +358,7 @@ _This file is auto-generated. To update, make the changes in the pkg/i18n direct
 | `` s `` | Порядок сортировки |  |
 | `` g `` | Просмотреть параметры сброса | View reset options (soft/mixed/hard) for resetting onto selected item. |
 | `` <ctrl+t> `` | Open external diff tool (git difftool) |  |
+| `` b `` | Просмотреть параметры бинарного поиска |  |
 | `` 0 `` | Focus main view |  |
 | `` <enter> `` | Просмотреть коммиты |  |
 | `` / `` | Filter the current view by text |  |
